@@ -39,8 +39,8 @@
       },
       "publishAllPorts": false,
       "useSSL": true,
-      "containerRunEnvironmentFiles": ".env",
-      "httpPort": 5202
+      "httpPort": 5202,
+      "containerRunArguments": "--env-file \"{ProjectDir}\\.env\""
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
