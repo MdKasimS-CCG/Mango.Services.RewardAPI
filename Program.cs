@@ -1,12 +1,34 @@
 using Mango.Services.RewardAPI.Data;
 
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
+using Microsoft.Extensions.Options;
+
+bool isRunningInContainer =
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+
+if (!isRunningInContainer)
+{
+    Env.Load(".env");
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
+var mangoOptions = new MangoOptions
+{
+    DefaultConnection =
+        builder.Configuration["ConnectionStrings:DefaultConnection"]
+        ?? string.Empty
+};
+
+builder.Services.AddSingleton(
+    Microsoft.Extensions.Options.Options.Create(mangoOptions));
+
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(mangoOptions.DefaultConnection));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -41,4 +63,9 @@ void ApplyMigration()
             _db.Database.Migrate();
         }
     }
+}
+
+public class MangoOptions
+{
+    public string DefaultConnection { get; set; } = string.Empty;
 }
