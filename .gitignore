@@ -82,6 +82,7 @@ appsettings.Development.json
 appsettings.Local.json
 .env
 .env.*
+!.env.example
 
 ###############################################################################
 # Publish Profiles (optional)
