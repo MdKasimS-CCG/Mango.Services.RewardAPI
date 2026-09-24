@@ -19,8 +19,10 @@ builder.Configuration.AddEnvironmentVariables();
 var mangoOptions = new MangoOptions
 {
     DefaultConnection =
-        builder.Configuration["ConnectionStrings:DefaultConnection"]
-        ?? string.Empty
+    (isRunningInContainer
+        ? builder.Configuration["Docker:ConnectionStrings:DefaultConnection"]
+        : builder.Configuration["Http:ConnectionStrings:DefaultConnection"])
+    ?? string.Empty
 };
 
 builder.Services.AddSingleton(
