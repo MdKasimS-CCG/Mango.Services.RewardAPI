@@ -33,6 +33,9 @@ namespace Mango.Services.RewardAPI.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
+                    b.Property<int>("PointsEarned")
+                        .HasColumnType("int");
+
                     b.Property<int>("RewardsActivity")
                         .HasColumnType("int");
 
@@ -44,6 +47,9 @@ namespace Mango.Services.RewardAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.ToTable("Rewards");
                 });

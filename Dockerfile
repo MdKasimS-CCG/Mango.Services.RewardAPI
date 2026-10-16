@@ -10,20 +10,20 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-COPY ["Mango.Services.RewardAPI.csproj", "./"]
+COPY ["Mango.Services.RewardAPI/Mango.Services.RewardAPI.csproj", "Mango.Services.RewardAPI/"]
 
-RUN dotnet restore "./Mango.Services.RewardAPI.csproj"
+RUN dotnet restore "./Mango.Services.RewardAPI/Mango.Services.RewardAPI.csproj"
 
 COPY . .
 
-RUN dotnet build "./Mango.Services.RewardAPI.csproj" \
+RUN dotnet build "./Mango.Services.RewardAPI/Mango.Services.RewardAPI.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 
-RUN dotnet publish "./Mango.Services.RewardAPI.csproj" \
+RUN dotnet publish "./Mango.Services.RewardAPI/Mango.Services.RewardAPI.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
     /p:UseAppHost=false

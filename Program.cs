@@ -1,4 +1,5 @@
 using Mango.Services.RewardAPI.Data;
+using Mango.Services.RewardAPI.Messaging;
 
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
@@ -31,6 +32,14 @@ builder.Services.AddSingleton(
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(mangoOptions.DefaultConnection));
+
+builder.Services.Configure<OrderCreatedConsumerSettings>(settings =>
+{
+    builder.Configuration.GetSection("MessageQueue:RabbitMQ").Bind(settings);
+    settings.QueueName = builder.Configuration[
+        "TopicAndQueueNames:OrderCreatedRewardQueue"] ?? string.Empty;
+});
+builder.Services.AddHostedService<OrderCreatedConsumer>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
