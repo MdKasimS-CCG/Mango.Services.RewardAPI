@@ -31,6 +31,11 @@ public sealed class OrderCreatedConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation(
+        "Reward OrderCreated consumer starting. Host={Host}, Port={Port}, Queue={Queue}",
+        _settings.HostName,
+        _settings.Port,
+        _settings.QueueName);
         ValidateSettings();
 
         var factory = new ConnectionFactory
@@ -62,6 +67,10 @@ public sealed class OrderCreatedConsumer : BackgroundService
             autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken);
+
+        _logger.LogInformation(
+        "Reward OrderCreated consumer subscribed to queue {Queue}.",
+        _settings.QueueName);
 
         try
         {
