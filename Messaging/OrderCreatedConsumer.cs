@@ -8,6 +8,7 @@ using RabbitMQ.Client.Events;
 using System.Data.Common;
 using System.Text;
 using System.Text.Json;
+using RabbitMQ.Client.Exceptions;
 
 namespace Mango.Services.RewardAPI.Messaging;
 
@@ -44,10 +45,35 @@ public sealed class OrderCreatedConsumer : BackgroundService
             Port = _settings.Port,
             UserName = _settings.UserName,
             Password = _settings.Password,
-            VirtualHost = _settings.VirtualHost
+            VirtualHost = _settings.VirtualHost,
+            AutomaticRecoveryEnabled = true
         };
 
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
+
+        var retryDelay = TimeSpan.FromSeconds(5);
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                _connection = await factory.CreateConnectionAsync(stoppingToken);
+                break;
+            }
+            catch (BrokerUnreachableException ex)
+                when (!stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Could not connect to RabbitMQ. Retrying in {RetryDelaySeconds} seconds.",
+                    retryDelay.TotalSeconds);
+
+                await Task.Delay(retryDelay, stoppingToken);
+            }
+        }
+
+        stoppingToken.ThrowIfCancellationRequested();
+
+
         _channel = await _connection.CreateChannelAsync(
             cancellationToken: stoppingToken);
 
