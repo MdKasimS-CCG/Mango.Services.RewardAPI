@@ -130,13 +130,19 @@ public sealed class OrderCreatedConsumer : BackgroundService
 
             var alreadyProcessed = await PersistRewardAsync(orderEvent, pointsEarned);
             if (alreadyProcessed)
+            {
                 _logger.LogInformation("Order {OrderId} already has a reward record.", orderEvent.OrderId);
-
-            await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
-            _logger.LogInformation(
+            }
+            else
+            {
+                _logger.LogInformation(
                 "Persisted reward for order {OrderId}: {PointsEarned} points.",
                 orderEvent.OrderId,
                 pointsEarned);
+            }
+
+            await _channel!.BasicAckAsync(args.DeliveryTag, multiple: false);
+
         }
         catch (Exception ex) when (IsUniqueOrderIdViolation(ex))
         {
