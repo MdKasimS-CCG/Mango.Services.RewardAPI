@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mango.Services.RewardAPI.Data;
-using Mango.Services.RewardAPI.Models;
+using Mango.Services.RewardAPI.Models.Dto;
 
 namespace Mango.Services.RewardAPI.Controllers;
 
@@ -15,9 +15,9 @@ public class RewardsController : ControllerBase
 
     // GET api/rewards/user/{userId}/total
     [HttpGet("user/{userId}/total")]
-    public async Task<ActionResult<Mango.Services.RewardAPI.Models.ResponseDto>> GetTotalPoints(string userId)
+    public async Task<ActionResult<Mango.Services.RewardAPI.Models.Dto.ResponseDto>> GetTotalPoints(string userId)
     {
-        var response = new Mango.Services.RewardAPI.Models.ResponseDto();
+        var response = new Mango.Services.RewardAPI.Models.Dto.ResponseDto();
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -36,9 +36,9 @@ public class RewardsController : ControllerBase
 
     // GET api/rewards/user/{userId}
     [HttpGet("user/{userId}")]
-    public async Task<ActionResult<Mango.Services.RewardAPI.Models.ResponseDto>> GetRewardsForUser(string userId)
+    public async Task<ActionResult<Mango.Services.RewardAPI.Models.Dto.ResponseDto>> GetRewardsForUser(string userId)
     {
-        var response = new Mango.Services.RewardAPI.Models.ResponseDto();
+        var response = new Mango.Services.RewardAPI.Models.Dto.ResponseDto();
 
         if (string.IsNullOrWhiteSpace(userId))
         {
