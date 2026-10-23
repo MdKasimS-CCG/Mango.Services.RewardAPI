@@ -80,13 +80,8 @@ public sealed class OrderCreatedConsumer : BackgroundService
         _channel = await _connection.CreateChannelAsync(
             cancellationToken: stoppingToken);
 
-
-    const string deadLetterExchange = "reward.dlx";
-    const string deadLetterQueue = "rewardordercreated.dlq";
-    const string deadLetterRoutingKey = "rewardordercreated";
-
     await _channel.ExchangeDeclareAsync(
-        exchange: deadLetterExchange,
+        exchange: DeadLetterExchange,
         type: ExchangeType.Direct,
         durable: true,
         autoDelete: false,
@@ -94,7 +89,7 @@ public sealed class OrderCreatedConsumer : BackgroundService
         cancellationToken: stoppingToken);
 
     await _channel.QueueDeclareAsync(
-        queue: deadLetterQueue,
+        queue: DeadLetterQueue,
         durable: true,
         exclusive: false,
         autoDelete: false,
@@ -102,15 +97,15 @@ public sealed class OrderCreatedConsumer : BackgroundService
         cancellationToken: stoppingToken);
 
     await _channel.QueueBindAsync(
-        queue: deadLetterQueue,
-        exchange: deadLetterExchange,
-        routingKey: deadLetterRoutingKey,
+        queue: DeadLetterQueue,
+        exchange: DeadLetterExchange,
+        routingKey: DeadLetterRoutingKey,
         cancellationToken: stoppingToken);
 
     var queueArguments = new Dictionary<string, object?>
     {
-        ["x-dead-letter-exchange"] = deadLetterExchange,
-        ["x-dead-letter-routing-key"] = deadLetterRoutingKey
+        ["x-dead-letter-exchange"] = DeadLetterExchange,
+        ["x-dead-letter-routing-key"] = DeadLetterRoutingKey
     };
 
     await _channel.QueueDeclareAsync(
@@ -296,5 +291,7 @@ public sealed class OrderCreatedConsumer : BackgroundService
             throw new InvalidOperationException("MessageQueue:RabbitMQ:Port must be between 1 and 65535.");
         if (string.IsNullOrWhiteSpace(_settings.QueueName))
             throw new InvalidOperationException("TopicAndQueueNames:OrderCreatedRewardQueue is required.");
+        if (string.IsNullOrWhiteSpace(_settings.VirtualHost))
+            throw new InvalidOperationException("MessageQueue:RabbitMQ:VirtualHost is required.");
     }
 }

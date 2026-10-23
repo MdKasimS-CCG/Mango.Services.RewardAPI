@@ -45,12 +45,37 @@ builder.Services.AddSingleton(
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(mangoOptions.DefaultConnection));
 
-builder.Services.Configure<OrderCreatedConsumerSettings>(settings =>
-{
-    builder.Configuration.GetSection("MessageQueue:RabbitMQ").Bind(settings);
-    settings.QueueName = builder.Configuration[
-        "TopicAndQueueNames:OrderCreatedRewardQueue"] ?? string.Empty;
-});
+
+builder.Services
+    .AddOptions<OrderCreatedConsumerSettings>()
+    .Bind(builder.Configuration.GetSection("MessageQueue:RabbitMQ"))
+    .Configure(settings =>
+    {
+        settings.QueueName =
+            builder.Configuration[
+                "TopicAndQueueNames:OrderCreatedRewardQueue"]
+            ?? string.Empty;
+    })
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.HostName),
+        "MessageQueue:RabbitMQ:HostName is required.")
+    .Validate(
+        settings => settings.Port is >= 1 and <= 65535,
+        "MessageQueue:RabbitMQ:Port must be between 1 and 65535.")
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.UserName),
+        "MessageQueue:RabbitMQ:UserName is required.")
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.Password),
+        "MessageQueue:RabbitMQ:Password is required.")
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.VirtualHost),
+        "MessageQueue:RabbitMQ:VirtualHost is required.")
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.QueueName),
+        "TopicAndQueueNames:OrderCreatedRewardQueue is required.")
+    .ValidateOnStart();
+
 builder.Services.AddHostedService<OrderCreatedConsumer>();
 
 builder.Services.AddControllers();
