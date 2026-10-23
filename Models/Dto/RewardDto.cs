@@ -9,5 +9,6 @@ namespace Mango.Services.RewardAPI.Models.Dto
         public DateTime RewardsDate { get; set; }
         public int RewardsActivity { get; set; }
         public int OrderId { get; set; }
+        public int PointsEarned { get; set; }
     }
 }
