@@ -4,6 +4,9 @@ using Mango.Services.RewardAPI.Messaging;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 bool isRunningInContainer =
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
@@ -19,6 +22,15 @@ builder.Configuration.AddEnvironmentVariables();
 
 var mangoOptions = new MangoOptions
 {
+    Secret = builder.Configuration["ApiSettings:Secret"]
+    ?? string.Empty,
+
+    Issuer = builder.Configuration["ApiSettings:Issuer"]
+    ?? string.Empty,
+
+    Audience = builder.Configuration["ApiSettings:Audience"]
+    ?? string.Empty,
+
     DefaultConnection =
     (isRunningInContainer
         ? builder.Configuration["Docker:ConnectionStrings:DefaultConnection"]
@@ -46,6 +58,34 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure JWT authentication to match OrderAPI.
+var key = Encoding.ASCII.GetBytes(mangoOptions.Secret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+    options.DefaultChallengeScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+
+        ValidateIssuer = true,
+        ValidIssuer = mangoOptions.Issuer,
+
+        ValidateAudience = true,
+        ValidAudience = mangoOptions.Audience
+    };
+});
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -57,6 +97,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -79,4 +120,7 @@ void ApplyMigration()
 public class MangoOptions
 {
     public string DefaultConnection { get; set; } = string.Empty;
+    public string Secret { get; set; } = string.Empty;
+    public string Issuer { get; set; } = string.Empty;
+    public string Audience { get; set; } = string.Empty;
 }

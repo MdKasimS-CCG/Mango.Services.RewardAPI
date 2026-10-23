@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mango.Services.RewardAPI.Data;
 using Mango.Services.RewardAPI.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Mango.Services.RewardAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class RewardsController : ControllerBase
