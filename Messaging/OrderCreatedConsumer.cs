@@ -19,6 +19,9 @@ public sealed class OrderCreatedConsumer : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private IConnection? _connection;
     private IChannel? _channel;
+    private const string DeadLetterExchange = "reward.dlx";
+    private const string DeadLetterQueue = "rewardordercreated.dlq";
+    private const string DeadLetterRoutingKey = "rewardordercreated";
 
     public OrderCreatedConsumer(
         IOptions<OrderCreatedConsumerSettings> options,
@@ -77,13 +80,47 @@ public sealed class OrderCreatedConsumer : BackgroundService
         _channel = await _connection.CreateChannelAsync(
             cancellationToken: stoppingToken);
 
-        await _channel.QueueDeclareAsync(
-            queue: _settings.QueueName,
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: stoppingToken);
+
+    const string deadLetterExchange = "reward.dlx";
+    const string deadLetterQueue = "rewardordercreated.dlq";
+    const string deadLetterRoutingKey = "rewardordercreated";
+
+    await _channel.ExchangeDeclareAsync(
+        exchange: deadLetterExchange,
+        type: ExchangeType.Direct,
+        durable: true,
+        autoDelete: false,
+        arguments: null,
+        cancellationToken: stoppingToken);
+
+    await _channel.QueueDeclareAsync(
+        queue: deadLetterQueue,
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
+        arguments: null,
+        cancellationToken: stoppingToken);
+
+    await _channel.QueueBindAsync(
+        queue: deadLetterQueue,
+        exchange: deadLetterExchange,
+        routingKey: deadLetterRoutingKey,
+        cancellationToken: stoppingToken);
+
+    var queueArguments = new Dictionary<string, object?>
+    {
+        ["x-dead-letter-exchange"] = deadLetterExchange,
+        ["x-dead-letter-routing-key"] = deadLetterRoutingKey
+    };
+
+    await _channel.QueueDeclareAsync(
+        queue: _settings.QueueName,
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
+        arguments: queueArguments,
+        cancellationToken: stoppingToken);
+
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.ReceivedAsync += HandleDeliveryAsync;
