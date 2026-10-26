@@ -11,5 +11,13 @@ namespace Mango.Services.RewardAPI.Data
 
         public DbSet<Rewards> Rewards { get; set; } = null!;
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Rewards>()
+                .HasIndex(reward => reward.OrderId)
+                .IsUnique();
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
